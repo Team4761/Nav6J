@@ -123,6 +123,15 @@ import edu.wpi.first.wpilibj.SerialPort;
     {
         return this.world_linear_accel_z;
     }
+    
+    /**
+     * Gets the angle returned from the gyro without constraining it
+     * to a certain range
+     * @return the angle from -infinity to infinity
+     */
+    public float getAccumulatedYaw() {
+    	return (float) (this.yaw - user_yaw_offset);
+    }
 
     /**
      * Indicates if the nav6 IMU is currently detection motion,
