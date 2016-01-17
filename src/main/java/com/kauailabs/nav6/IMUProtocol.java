@@ -112,7 +112,6 @@ public class IMUProtocol {
     public final static int IMU_PROTOCOL_MAX_MESSAGE_LENGTH = QUATERNION_UPDATE_MESSAGE_LENGTH;
 
     static public class YPRUpdate {
-
         public float yaw;
         public float pitch;
         public float roll;
@@ -120,12 +119,10 @@ public class IMUProtocol {
     }
 
     static public class StreamCommand {
-
         public byte streamType;
     }
 
     static public class StreamResponse {
-
         public byte streamType;
         public short gyroFsrDps;
         public short accelFsrG;
@@ -139,7 +136,6 @@ public class IMUProtocol {
     }
 
     static public class QuaternionUpdate {
-
         public short q1;
         public short q2;
         public short q3;
@@ -154,7 +150,6 @@ public class IMUProtocol {
     }
 
     static public class GyroUpdate {
-
         public short gyroX;
         public short gyroY;
         public short gyroZ;
@@ -183,10 +178,10 @@ public class IMUProtocol {
     }
 
     public static int decodeStreamResponse(byte[] buffer, int offset, int length, StreamResponse r) {
-        
         if (length < STREAM_RESPONSE_MESSAGE_LENGTH) {
             return 0;
         }
+        
         if ((buffer[offset+0] == PACKET_START_CHAR) && (buffer[offset+1] == MSG_ID_STREAM_RESPONSE)) {
             if (!verifyChecksum(buffer, offset+STREAM_RESPONSE_CHECKSUM_INDEX)) {
                 return 0;
@@ -205,6 +200,7 @@ public class IMUProtocol {
 
             return STREAM_RESPONSE_MESSAGE_LENGTH;
         }
+        
         return 0;
     }
 
@@ -212,14 +208,16 @@ public class IMUProtocol {
         if (length < STREAM_CMD_MESSAGE_LENGTH) {
             return 0;
         }
-        if ((buffer[offset+0] == '!') && (buffer[offset+1] == MSGID_STREAM_CMD)) {
-            if (!verifyChecksum(buffer, offset+STREAM_CMD_CHECKSUM_INDEX)) {
+        
+        if ((buffer[offset + 0] == '!') && (buffer[offset + 1] == MSGID_STREAM_CMD)) {
+            if (!verifyChecksum(buffer, offset + STREAM_CMD_CHECKSUM_INDEX)) {
                 return 0;
             }
 
-            c.streamType = buffer[offset+STREAM_CMD_STREAM_TYPE_INDEX];
+            c.streamType = buffer[offset + STREAM_CMD_STREAM_TYPE_INDEX];
             return STREAM_CMD_MESSAGE_LENGTH;
         }
+        
         return 0;
     }
 
@@ -227,66 +225,70 @@ public class IMUProtocol {
         if (length < YPR_UPDATE_MESSAGE_LENGTH) {
             return 0;
         }
-        if ((buffer[offset+0] == '!') && (buffer[offset+1] == 'y')) {
-            if (!verifyChecksum(buffer, offset+YPR_UPDATE_CHECKSUM_INDEX)) {
+        
+        if ((buffer[offset + 0] == '!') && (buffer[offset + 1] == 'y')) {
+            if (!verifyChecksum(buffer, offset + YPR_UPDATE_CHECKSUM_INDEX)) {
                 return 0;
             }
 
-            u.yaw = decodeProtocolFloat(buffer, offset+YPR_UPDATE_YAW_VALUE_INDEX);
-            u.pitch = decodeProtocolFloat(buffer, offset+YPR_UPDATE_PITCH_VALUE_INDEX);
-            u.roll = decodeProtocolFloat(buffer, offset+YPR_UPDATE_ROLL_VALUE_INDEX);
-            u.compassHeading = decodeProtocolFloat(buffer, offset+YPR_UPDATE_COMPASS_VALUE_INDEX);
+            u.yaw = decodeProtocolFloat(buffer, offset + YPR_UPDATE_YAW_VALUE_INDEX);
+            u.pitch = decodeProtocolFloat(buffer, offset + YPR_UPDATE_PITCH_VALUE_INDEX);
+            u.roll = decodeProtocolFloat(buffer, offset + YPR_UPDATE_ROLL_VALUE_INDEX);
+            u.compassHeading = decodeProtocolFloat(buffer, offset + YPR_UPDATE_COMPASS_VALUE_INDEX);
             return YPR_UPDATE_MESSAGE_LENGTH;
         }
+        
         return 0;
     }
 
-    public static int decodeQuaternionUpdate(byte[] buffer, int offset, int length,
-            QuaternionUpdate u) {
+    public static int decodeQuaternionUpdate(byte[] buffer, int offset, int length, QuaternionUpdate u) {
         if (length < QUATERNION_UPDATE_MESSAGE_LENGTH) {
             return 0;
         }
-        if ((buffer[offset+0] == PACKET_START_CHAR) && (buffer[offset+1] == MSGID_QUATERNION_UPDATE)) {
-            if (!verifyChecksum(buffer, offset+QUATERNION_UPDATE_CHECKSUM_INDEX)) {
+        
+        if ((buffer[offset + 0] == PACKET_START_CHAR) && (buffer[offset + 1] == MSGID_QUATERNION_UPDATE)) {
+            if (!verifyChecksum(buffer, offset + QUATERNION_UPDATE_CHECKSUM_INDEX)) {
                 return 0;
             }
 
-            u.q1 = decodeProtocolUint16(buffer, offset+QUATERNION_UPDATE_QUAT1_VALUE_INDEX);
-            u.q2 = decodeProtocolUint16(buffer, offset+QUATERNION_UPDATE_QUAT2_VALUE_INDEX);
-            u.q3 = decodeProtocolUint16(buffer, offset+QUATERNION_UPDATE_QUAT3_VALUE_INDEX);
-            u.q4 = decodeProtocolUint16(buffer, offset+QUATERNION_UPDATE_QUAT4_VALUE_INDEX);
-            u.accelX = decodeProtocolUint16(buffer, offset+QUATERNION_UPDATE_ACCEL_X_VALUE_INDEX);
-            u.accelY = decodeProtocolUint16(buffer, offset+QUATERNION_UPDATE_ACCEL_Y_VALUE_INDEX);
-            u.accelZ = decodeProtocolUint16(buffer, offset+QUATERNION_UPDATE_ACCEL_Z_VALUE_INDEX);
-            u.magX = decodeProtocolUint16(buffer, offset+QUATERNION_UPDATE_MAG_X_VALUE_INDEX);
-            u.magY = decodeProtocolUint16(buffer, offset+QUATERNION_UPDATE_MAG_Y_VALUE_INDEX);
-            u.magZ = decodeProtocolUint16(buffer, offset+QUATERNION_UPDATE_MAG_Z_VALUE_INDEX);
-            u.tempC = decodeProtocolFloat(buffer, offset+QUATERNION_UPDATE_TEMP_VALUE_INDEX);
+            u.q1 = decodeProtocolUint16(buffer, offset + QUATERNION_UPDATE_QUAT1_VALUE_INDEX);
+            u.q2 = decodeProtocolUint16(buffer, offset + QUATERNION_UPDATE_QUAT2_VALUE_INDEX);
+            u.q3 = decodeProtocolUint16(buffer, offset + QUATERNION_UPDATE_QUAT3_VALUE_INDEX);
+            u.q4 = decodeProtocolUint16(buffer, offset + QUATERNION_UPDATE_QUAT4_VALUE_INDEX);
+            u.accelX = decodeProtocolUint16(buffer, offset + QUATERNION_UPDATE_ACCEL_X_VALUE_INDEX);
+            u.accelY = decodeProtocolUint16(buffer, offset + QUATERNION_UPDATE_ACCEL_Y_VALUE_INDEX);
+            u.accelZ = decodeProtocolUint16(buffer, offset + QUATERNION_UPDATE_ACCEL_Z_VALUE_INDEX);
+            u.magX = decodeProtocolUint16(buffer, offset + QUATERNION_UPDATE_MAG_X_VALUE_INDEX);
+            u.magY = decodeProtocolUint16(buffer, offset + QUATERNION_UPDATE_MAG_Y_VALUE_INDEX);
+            u.magZ = decodeProtocolUint16(buffer, offset + QUATERNION_UPDATE_MAG_Z_VALUE_INDEX);
+            u.tempC = decodeProtocolFloat(buffer, offset + QUATERNION_UPDATE_TEMP_VALUE_INDEX);
+            
             return QUATERNION_UPDATE_MESSAGE_LENGTH;
         }
         return 0;
     }
 
-    public static int decodeGyroUpdate(byte[] buffer, int offset, int length,
-            GyroUpdate u) {
+    public static int decodeGyroUpdate(byte[] buffer, int offset, int length, GyroUpdate u) {
         if (length < GYRO_UPDATE_MESSAGE_LENGTH) {
             return 0;
         }
-        if ((buffer[offset+0] == PACKET_START_CHAR) && (buffer[offset+1] == MSGID_GYRO_UPDATE)) {
+        
+        if ((buffer[offset + 0] == PACKET_START_CHAR) && (buffer[offset + 1] == MSGID_GYRO_UPDATE)) {
             if (!verifyChecksum(buffer, offset+GYRO_UPDATE_CHECKSUM_INDEX)) {
                 return 0;
             }
 
-            u.gyroX = decodeProtocolUint16(buffer, offset+GYRO_UPDATE_GYRO_X_VALUE_INDEX);
-            u.gyroY = decodeProtocolUint16(buffer, offset+GYRO_UPDATE_GYRO_Y_VALUE_INDEX);
-            u.gyroZ = decodeProtocolUint16(buffer, offset+GYRO_UPDATE_GYRO_Z_VALUE_INDEX);
-            u.accelX = decodeProtocolUint16(buffer, offset+GYRO_UPDATE_ACCEL_X_VALUE_INDEX);
-            u.accelY = decodeProtocolUint16(buffer, offset+GYRO_UPDATE_ACCEL_Y_VALUE_INDEX);
-            u.accelZ = decodeProtocolUint16(buffer, offset+GYRO_UPDATE_ACCEL_Z_VALUE_INDEX);
-            u.magX = decodeProtocolUint16(buffer, offset+GYRO_UPDATE_MAG_X_VALUE_INDEX);
-            u.magY = decodeProtocolUint16(buffer, offset+GYRO_UPDATE_MAG_Y_VALUE_INDEX);
-            u.magZ = decodeProtocolUint16(buffer, offset+GYRO_UPDATE_MAG_Z_VALUE_INDEX);
-            u.tempC = decodeProtocolFloat(buffer, offset+GYRO_UPDATE_TEMP_VALUE_INDEX);
+            u.gyroX = decodeProtocolUint16(buffer, offset + GYRO_UPDATE_GYRO_X_VALUE_INDEX);
+            u.gyroY = decodeProtocolUint16(buffer, offset + GYRO_UPDATE_GYRO_Y_VALUE_INDEX);
+            u.gyroZ = decodeProtocolUint16(buffer, offset + GYRO_UPDATE_GYRO_Z_VALUE_INDEX);
+            u.accelX = decodeProtocolUint16(buffer, offset + GYRO_UPDATE_ACCEL_X_VALUE_INDEX);
+            u.accelY = decodeProtocolUint16(buffer, offset + GYRO_UPDATE_ACCEL_Y_VALUE_INDEX);
+            u.accelZ = decodeProtocolUint16(buffer, offset + GYRO_UPDATE_ACCEL_Z_VALUE_INDEX);
+            u.magX = decodeProtocolUint16(buffer, offset + GYRO_UPDATE_MAG_X_VALUE_INDEX);
+            u.magY = decodeProtocolUint16(buffer, offset + GYRO_UPDATE_MAG_Y_VALUE_INDEX);
+            u.magZ = decodeProtocolUint16(buffer, offset + GYRO_UPDATE_MAG_Z_VALUE_INDEX);
+            u.tempC = decodeProtocolFloat(buffer, offset + GYRO_UPDATE_TEMP_VALUE_INDEX);
+            
             return GYRO_UPDATE_MESSAGE_LENGTH;
         }
         return 0;
@@ -299,8 +301,8 @@ public class IMUProtocol {
             for (int i = 0; i < contentLength; i++) {
                 checksum += buffer[i];
             }
-        // convert checksum to two ascii bytes
-
+            
+            // convert checksum to two ascii bytes
             byteToHex(checksum, buffer, contentLength);
             // Message Terminator
             buffer[contentLength + CHECKSUM_LENGTH + 0] = '\r';
@@ -309,7 +311,7 @@ public class IMUProtocol {
     }
 
     final protected static byte[] hexArray
-            = new byte[]{(byte) '0', (byte) '1', (byte) '2', (byte) '3',
+            = new byte[] {(byte) '0', (byte) '1', (byte) '2', (byte) '3',
                 (byte) '4', (byte) '5', (byte) '6', (byte) '7',
                 (byte) '8', (byte) '9', (byte) 'A', (byte) 'B',
                 (byte) 'C', (byte) 'D', (byte) 'E', (byte) 'F'};
@@ -348,6 +350,7 @@ public class IMUProtocol {
         byte firstDigit = (byte) (checksum[0 + offset] <= '9' ? checksum[0 + offset] - '0' : ((checksum[0 + offset] - 'A') + 10));
         byte secondDigit = (byte) (checksum[1 + offset] <= '9' ? checksum[1 + offset] - '0' : ((checksum[1 + offset] - 'A') + 10));
         byte decodedChecksum = (byte) ((firstDigit * 16) + secondDigit);
+        
         return decodedChecksum;
     }
 
