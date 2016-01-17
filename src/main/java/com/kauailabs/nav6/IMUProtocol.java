@@ -127,10 +127,10 @@ public class IMUProtocol {
     static public class StreamResponse {
 
         public byte stream_type;
-        public short gyro_fsr_dps;
-        public short accel_fsr_g;
-        public short update_rate_hz;
-        public float yaw_offset_degrees;
+        public short gyroFsrDps;
+        public short accelFsrG;
+        public short updateRateHz;
+        public float yawOffsetDegrees;
         public short q1_offset;
         public short q2_offset;
         public short q3_offset;
@@ -193,10 +193,10 @@ public class IMUProtocol {
             }
 
             r.stream_type = buffer[offset+2];
-            r.gyro_fsr_dps = decodeProtocolUint16(buffer, offset+STREAM_RESPONSE_GYRO_FULL_SCALE_DPS_RANGE);
-            r.accel_fsr_g = decodeProtocolUint16(buffer, offset+STREAM_RESPONSE_ACCEL_FULL_SCALE_G_RANGE);
-            r.update_rate_hz = decodeProtocolUint16(buffer, offset+STREAM_RESPONSE_UPDATE_RATE_HZ);
-            r.yaw_offset_degrees = decodeProtocolFloat(buffer, offset+STREAM_RESPONSE_YAW_OFFSET_DEGREES);
+            r.gyroFsrDps = decodeProtocolUint16(buffer, offset+STREAM_RESPONSE_GYRO_FULL_SCALE_DPS_RANGE);
+            r.accelFsrG = decodeProtocolUint16(buffer, offset+STREAM_RESPONSE_ACCEL_FULL_SCALE_G_RANGE);
+            r.updateRateHz = decodeProtocolUint16(buffer, offset+STREAM_RESPONSE_UPDATE_RATE_HZ);
+            r.yawOffsetDegrees = decodeProtocolFloat(buffer, offset+STREAM_RESPONSE_YAW_OFFSET_DEGREES);
             r.q1_offset = decodeProtocolUint16(buffer, offset+STREAM_RESPONSE_QUAT1_OFFSET);
             r.q2_offset = decodeProtocolUint16(buffer, offset+STREAM_RESPONSE_QUAT2_OFFSET);
             r.q3_offset = decodeProtocolUint16(buffer, offset+STREAM_RESPONSE_QUAT3_OFFSET);

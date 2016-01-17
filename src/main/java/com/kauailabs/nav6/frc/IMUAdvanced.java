@@ -130,7 +130,7 @@ import edu.wpi.first.wpilibj.SerialPort;
      * @return the angle from -infinity to infinity
      */
     public float getAccumulatedYaw() {
-    	return (float) (this.yaw - user_yaw_offset);
+    	return (float) (this.yaw - userYawOffset);
     }
 
     /**
@@ -237,16 +237,16 @@ import edu.wpi.first.wpilibj.SerialPort;
             rollDegrees = (float) (ypr[2] * (180.0/Math.PI)); 
              
             // Subtract nav6 offset, and handle potential 360 degree wrap-around
-            yawDegrees -= nav6_yaw_offset_degrees;
+            yawDegrees -= nav6YawOffsetDegrees;
             if ( yawDegrees < -180 ) yawDegrees += 360;
             if ( yawDegrees > 180 ) yawDegrees -= 360;
              
             // calculate linear acceleration by 
             // removing the gravity component (+1g = +4096 in standard DMP FIFO packet)
              
-            linearAccelerationX = (float) ((((float)raw_update.accel_x) / (32768.0 / accel_fsr_g)) - gravity[0]);
-            linearAccelerationY = (float) ((((float)raw_update.accel_y) / (32768.0 / accel_fsr_g)) - gravity[1]);
-            linearAccelerationZ = (float) ((((float)raw_update.accel_z) / (32768.0 / accel_fsr_g)) - gravity[2]); 
+            linearAccelerationX = (float) ((((float)raw_update.accel_x) / (32768.0 / accelFsrG)) - gravity[0]);
+            linearAccelerationY = (float) ((((float)raw_update.accel_y) / (32768.0 / accelFsrG)) - gravity[1]);
+            linearAccelerationZ = (float) ((((float)raw_update.accel_z) / (32768.0 / accelFsrG)) - gravity[2]); 
             
             // Calculate world-frame acceleration
             
@@ -328,7 +328,7 @@ import edu.wpi.first.wpilibj.SerialPort;
             this.yaw = yawDegrees;
             this.pitch = pitchDegrees;
             this.roll = rollDegrees;
-            this.compass_heading = tiltCompensatedHeadingDegrees;
+            this.compassHeading = tiltCompensatedHeadingDegrees;
             
             this.worldLinearAccelX = worldLinearAccelerationX;
             this.worldLinearAccelY = worldLinearAccelerationY;
