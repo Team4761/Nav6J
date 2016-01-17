@@ -140,8 +140,7 @@ import edu.wpi.first.wpilibj.SerialPort;
      * 0.01g, the motion state is indicated.
      * @return Returns true if the nav6 IMU is currently detecting motion.
      */
-    public boolean isMoving()
-    {
+    public boolean isMoving() {
         return (getAverageFromWorldLinearAccelHistory() >= 0.01);
     }
 
@@ -153,8 +152,7 @@ import edu.wpi.first.wpilibj.SerialPort;
      * dependent calibration.
      * @return The current temperature (in degrees centigrade).
      */
-    public float getTempC()
-    {
+    public float getTempC() {
         return this.tempC;
     }
     
@@ -165,25 +163,27 @@ import edu.wpi.first.wpilibj.SerialPort;
         initWorldLinearAccelHistory();
     }
 
-    private void initWorldLinearAccelHistory(){
+    private void initWorldLinearAccelHistory() {
         Arrays.fill(worldLinearAccelHistory,0);
         nextWorldLinearAccelHistoryIndex = 0;
         worldLinearAccelerationRecentAvg = (float) 0.0;
     }
     
-    private void updateWorldLinearAccelHistory( float x, float y, float z ){
+    private void updateWorldLinearAccelHistory(float x, float y, float z) {
         if (nextWorldLinearAccelHistoryIndex >= WORLD_LINEAR_ACCEL_HISTORY_LENGTH) {
             nextWorldLinearAccelHistoryIndex = 0;
         }
+        
         worldLinearAccelHistory[nextWorldLinearAccelHistoryIndex] = Math.abs(x) + Math.abs(y);
         nextWorldLinearAccelHistoryIndex++;
     }
     
-    public float getAverageFromWorldLinearAccelHistory(){
+    public float getAverageFromWorldLinearAccelHistory() {
         float worldLinearAccelHistorySum = (float) 0.0;
         for (int i = 0; i < WORLD_LINEAR_ACCEL_HISTORY_LENGTH; i++) {
             worldLinearAccelHistorySum += worldLinearAccelHistory[i];
         }
+        
         return worldLinearAccelHistorySum / WORLD_LINEAR_ACCEL_HISTORY_LENGTH;
     }
 
