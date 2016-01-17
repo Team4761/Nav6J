@@ -63,6 +63,8 @@ public class IMU extends SensorBase implements PIDSource, LiveWindowSendable, Ru
     private IMUProtocol.YPRUpdate yprUpdateData;
     protected byte updateType = IMUProtocol.MSGID_YPR_UPDATE;
     
+    protected PIDSourceType pidSourceType;
+    
     /**
      * Constructs the IMU class, overriding the default update rate
      * with a custom rate which may be from 4 to 100, representing
@@ -91,7 +93,9 @@ public class IMU extends SensorBase implements PIDSource, LiveWindowSendable, Ru
         }
         initIMU();
         m_thread = new Thread(this);
-        m_thread.start();        
+        m_thread.start();      
+        
+        pidSourceType = PIDSourceType.kDisplacement;
     }
     
     /**
@@ -104,7 +108,6 @@ public class IMU extends SensorBase implements PIDSource, LiveWindowSendable, Ru
     }
 
     protected void initIMU() {
-        
         // The nav6 IMU serial port configuration is 8 data bits, no parity, one stop bit. 
         // No flow control is used.
         // Conveniently, these are the defaults used by the WPILib's SerialPort class.
@@ -128,7 +131,7 @@ public class IMU extends SensorBase implements PIDSource, LiveWindowSendable, Ru
         }
     }
 
-    protected void setStreamResponse( IMUProtocol.StreamResponse response ) {
+    protected void setStreamResponse(IMUProtocol.StreamResponse response) {
         flags = response.flags;
         nav6YawOffsetDegrees = response.yawOffsetDegrees;
         accelFsrG = response.accelFsrG;
@@ -291,13 +294,17 @@ public class IMU extends SensorBase implements PIDSource, LiveWindowSendable, Ru
     }
 
     /**
-     * Returns the current yaw value reported by the nav6 IMU.  This
-     * yaw value is useful for implementing features including "auto rotate 
-     * to a known angle".
-     * @return The current yaw angle in degrees (-180 to 180).
+     * Returns the current yaw value reported by the nav6 IMU if PIDSourceType is kDisplacement.
+     * If PIDSource type is kRate then it returns the rate of yaw change. This yaw value is
+     * useful for implementing features including "auto rotate to a known angle".
+     * @return The current yaw angle in degrees (-180 to 180) or the rate of yaw change.
      */
     public double pidGet() {
-        return getYaw();
+    	if (pidSourceType == PIDSourceType.kDisplacement) {
+    		return getYaw();
+    	} else {
+    		return yawHistory[yawHistory.length - 1] - yawHistory[yawHistory.length - 2]; // Subtract current value minus the last value to get the update rate
+    	}
     }
 
     public void updateTable() {
@@ -440,14 +447,20 @@ public class IMU extends SensorBase implements PIDSource, LiveWindowSendable, Ru
         }
     }
 
+    /**
+     * Set the PIDSourceType. This affects the output of pidGet
+     * @param pidSource kDisplacement for yaw or kRate for rate of yaw change
+     */
 	@Override
 	public void setPIDSourceType(PIDSourceType pidSource) {
-		// TODO Auto-generated method stub
+		pidSourceType = pidSource;
 	}
 
+	/**
+	 * Gets the current PIDSourceType
+	 */
 	@Override
 	public PIDSourceType getPIDSourceType() {
-		// TODO Auto-generated method stub
-		return null;
+		return pidSourceType;
 	}
 }

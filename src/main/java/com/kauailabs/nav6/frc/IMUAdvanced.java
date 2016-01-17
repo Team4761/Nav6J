@@ -13,6 +13,7 @@ import java.util.Arrays;
 
 import com.kauailabs.nav6.IMUProtocol;
 
+import edu.wpi.first.wpilibj.PIDSourceType;
 import edu.wpi.first.wpilibj.SerialPort;
 
 /**
@@ -336,5 +337,19 @@ import edu.wpi.first.wpilibj.SerialPort;
             this.tempC = raw_update.tempC;
             updateYawHistory(this.yaw);            
         }
+    }
+    
+    /**
+     * Returns the current accumulated yaw value reported by the nav6 IMU if PIDSourceType is kDisplacement.
+     * If PIDSource type is kRate then it returns the rate of yaw change. This yaw value is
+     * useful for implementing features including "auto rotate to a known angle".
+     * @return The current yaw angle in degrees (-infinity to infinity) or the rate of yaw change.
+     */
+    public double pidGet() {
+    	if (this.pidSourceType == PIDSourceType.kDisplacement) {
+    		return getAccumulatedYaw();
+    	}
+    	    	
+    	return super.pidGet(); // If it isn't kDisplacement then it will return a rate
     }
 }
