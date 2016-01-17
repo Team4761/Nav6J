@@ -61,7 +61,7 @@ public class IMU extends SensorBase implements PIDSource, LiveWindowSendable, Ru
     double last_update_time;
     boolean stop = false;
     private IMUProtocol.YPRUpdate ypr_update_data;
-    protected byte update_type = IMUProtocol.MSGID_YPR_UPDATE;
+    protected byte updateType = IMUProtocol.MSGID_YPR_UPDATE;
     
     /**
      * Constructs the IMU class, overriding the default update rate
@@ -120,7 +120,7 @@ public class IMU extends SensorBase implements PIDSource, LiveWindowSendable, Ru
 
         // set the nav6 into the desired update mode
 	byte stream_command_buffer[] = new byte[256];
-	int packet_length = IMUProtocol.encodeStreamCommand( stream_command_buffer, update_type, update_rate_hz ); 
+	int packet_length = IMUProtocol.encodeStreamCommand( stream_command_buffer, updateType, update_rate_hz ); 
         try {
             serial_port.write( stream_command_buffer, packet_length );
         } catch (RuntimeException ex) {
@@ -359,7 +359,7 @@ public class IMU extends SensorBase implements PIDSource, LiveWindowSendable, Ru
 
         byte[] stream_command = new byte[256];
         
-	int cmd_packet_length = IMUProtocol.encodeStreamCommand( stream_command, update_type, update_rate_hz ); 
+	int cmd_packet_length = IMUProtocol.encodeStreamCommand( stream_command, updateType, update_rate_hz ); 
         try {
             serial_port.reset();
             serial_port.write( stream_command, cmd_packet_length );
@@ -425,7 +425,7 @@ public class IMU extends SensorBase implements PIDSource, LiveWindowSendable, Ru
                     // of operation, (re)send a stream configuration request
                     
                     if ( !stream_response_received && ((Timer.getFPGATimestamp() - last_stream_command_sent_timestamp ) > 3.0 ) ) {
-                        cmd_packet_length = IMUProtocol.encodeStreamCommand( stream_command, update_type, update_rate_hz ); 
+                        cmd_packet_length = IMUProtocol.encodeStreamCommand( stream_command, updateType, update_rate_hz ); 
                         try {
                             last_stream_command_sent_timestamp = Timer.getFPGATimestamp();
                             serial_port.write( stream_command, cmd_packet_length );
