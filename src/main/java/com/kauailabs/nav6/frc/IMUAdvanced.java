@@ -244,9 +244,9 @@ import edu.wpi.first.wpilibj.SerialPort;
             // calculate linear acceleration by 
             // removing the gravity component (+1g = +4096 in standard DMP FIFO packet)
              
-            linearAccelerationX = (float) ((((float)raw_update.accel_x) / (32768.0 / accelFsrG)) - gravity[0]);
-            linearAccelerationY = (float) ((((float)raw_update.accel_y) / (32768.0 / accelFsrG)) - gravity[1]);
-            linearAccelerationZ = (float) ((((float)raw_update.accel_z) / (32768.0 / accelFsrG)) - gravity[2]); 
+            linearAccelerationX = (float) ((((float)raw_update.accelX) / (32768.0 / accelFsrG)) - gravity[0]);
+            linearAccelerationY = (float) ((((float)raw_update.accelY) / (32768.0 / accelFsrG)) - gravity[1]);
+            linearAccelerationZ = (float) ((((float)raw_update.accelZ) / (32768.0 / accelFsrG)) - gravity[2]); 
             
             // Calculate world-frame acceleration
             
@@ -311,8 +311,8 @@ import edu.wpi.first.wpilibj.SerialPort;
             float cosPitch = (float) Math.cos(invertedPitch);
             float sinPitch = (float) Math.sin(invertedPitch);
             
-            float MAG_X = raw_update.mag_x * cosPitch + raw_update.mag_z * sinPitch;
-            float MAG_Y = raw_update.mag_x * sinRoll * sinPitch + raw_update.mag_y * cosRoll - raw_update.mag_z * sinRoll * cosPitch;
+            float MAG_X = raw_update.magX * cosPitch + raw_update.magZ * sinPitch;
+            float MAG_Y = raw_update.magX * sinRoll * sinPitch + raw_update.magY * cosRoll - raw_update.magZ * sinRoll * cosPitch;
             float tiltCompensatedHeadingRadians = (float) Math.atan2(MAG_Y, MAG_X);
             float tiltCompensatedHeadingDegrees = (float) (tiltCompensatedHeadingRadians * (180.0 / Math.PI));
             
@@ -333,7 +333,7 @@ import edu.wpi.first.wpilibj.SerialPort;
             this.worldLinearAccelX = worldLinearAccelerationX;
             this.worldLinearAccelY = worldLinearAccelerationY;
             this.worldLinearAccelZ = worldLinearAccelerationZ;
-            this.tempC = raw_update.temp_c;
+            this.tempC = raw_update.tempC;
             updateYawHistory(this.yaw);            
         }
     }

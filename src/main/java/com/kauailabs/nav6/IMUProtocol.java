@@ -116,25 +116,25 @@ public class IMUProtocol {
         public float yaw;
         public float pitch;
         public float roll;
-        public float compass_heading;
+        public float compassHeading;
     }
 
     static public class StreamCommand {
 
-        public byte stream_type;
+        public byte streamType;
     }
 
     static public class StreamResponse {
 
-        public byte stream_type;
+        public byte streamType;
         public short gyroFsrDps;
         public short accelFsrG;
         public short updateRateHz;
         public float yawOffsetDegrees;
-        public short q1_offset;
-        public short q2_offset;
-        public short q3_offset;
-        public short q4_offset;
+        public short q1Offset;
+        public short q2Offset;
+        public short q3Offset;
+        public short q4Offset;
         public short flags;
     }
 
@@ -144,40 +144,40 @@ public class IMUProtocol {
         public short q2;
         public short q3;
         public short q4;
-        public short accel_x;
-        public short accel_y;
-        public short accel_z;
-        public short mag_x;
-        public short mag_y;
-        public short mag_z;
-        public float temp_c;
+        public short accelX;
+        public short accelY;
+        public short accelZ;
+        public short magX;
+        public short magY;
+        public short magZ;
+        public float tempC;
     }
 
     static public class GyroUpdate {
 
-        public short gyro_x;
-        public short gyro_y;
-        public short gyro_z;
-        public short accel_x;
-        public short accel_y;
-        public short accel_z;
-        public short mag_x;
-        public short mag_y;
-        public short mag_z;
-        public float temp_c;
+        public short gyroX;
+        public short gyroY;
+        public short gyroZ;
+        public short accelX;
+        public short accelY;
+        public short accelZ;
+        public short magX;
+        public short magY;
+        public short magZ;
+        public float tempC;
     }
 
-    public static int encodeStreamCommand(byte[] protocol_buffer, byte stream_type, byte update_rate_hz) {
+    public static int encodeStreamCommand(byte[] protocolBuffer, byte streamType, byte updateRateHz) {
         // Header
-        protocol_buffer[0] = PACKET_START_CHAR;
-        protocol_buffer[1] = MSGID_STREAM_CMD;
+        protocolBuffer[0] = PACKET_START_CHAR;
+        protocolBuffer[1] = MSGID_STREAM_CMD;
 
         // Data
-        protocol_buffer[STREAM_CMD_STREAM_TYPE_INDEX] = stream_type;
-        byteToHex(update_rate_hz, protocol_buffer, STREAM_CMD_UPDATE_RATE_HZ_INDEX);
+        protocolBuffer[STREAM_CMD_STREAM_TYPE_INDEX] = streamType;
+        byteToHex(updateRateHz, protocolBuffer, STREAM_CMD_UPDATE_RATE_HZ_INDEX);
 
         // Footer
-        encodeTermination(protocol_buffer, STREAM_CMD_MESSAGE_LENGTH, STREAM_CMD_MESSAGE_LENGTH - 4);
+        encodeTermination(protocolBuffer, STREAM_CMD_MESSAGE_LENGTH, STREAM_CMD_MESSAGE_LENGTH - 4);
 
         return STREAM_CMD_MESSAGE_LENGTH;
     }
@@ -192,15 +192,15 @@ public class IMUProtocol {
                 return 0;
             }
 
-            r.stream_type = buffer[offset+2];
+            r.streamType = buffer[offset+2];
             r.gyroFsrDps = decodeProtocolUint16(buffer, offset+STREAM_RESPONSE_GYRO_FULL_SCALE_DPS_RANGE);
             r.accelFsrG = decodeProtocolUint16(buffer, offset+STREAM_RESPONSE_ACCEL_FULL_SCALE_G_RANGE);
             r.updateRateHz = decodeProtocolUint16(buffer, offset+STREAM_RESPONSE_UPDATE_RATE_HZ);
             r.yawOffsetDegrees = decodeProtocolFloat(buffer, offset+STREAM_RESPONSE_YAW_OFFSET_DEGREES);
-            r.q1_offset = decodeProtocolUint16(buffer, offset+STREAM_RESPONSE_QUAT1_OFFSET);
-            r.q2_offset = decodeProtocolUint16(buffer, offset+STREAM_RESPONSE_QUAT2_OFFSET);
-            r.q3_offset = decodeProtocolUint16(buffer, offset+STREAM_RESPONSE_QUAT3_OFFSET);
-            r.q4_offset = decodeProtocolUint16(buffer, offset+STREAM_RESPONSE_QUAT4_OFFSET);
+            r.q1Offset = decodeProtocolUint16(buffer, offset+STREAM_RESPONSE_QUAT1_OFFSET);
+            r.q2Offset = decodeProtocolUint16(buffer, offset+STREAM_RESPONSE_QUAT2_OFFSET);
+            r.q3Offset = decodeProtocolUint16(buffer, offset+STREAM_RESPONSE_QUAT3_OFFSET);
+            r.q4Offset = decodeProtocolUint16(buffer, offset+STREAM_RESPONSE_QUAT4_OFFSET);
             r.flags = decodeProtocolUint16(buffer, offset+STREAM_RESPONSE_FLAGS);
 
             return STREAM_RESPONSE_MESSAGE_LENGTH;
@@ -217,7 +217,7 @@ public class IMUProtocol {
                 return 0;
             }
 
-            c.stream_type = buffer[offset+STREAM_CMD_STREAM_TYPE_INDEX];
+            c.streamType = buffer[offset+STREAM_CMD_STREAM_TYPE_INDEX];
             return STREAM_CMD_MESSAGE_LENGTH;
         }
         return 0;
@@ -235,7 +235,7 @@ public class IMUProtocol {
             u.yaw = decodeProtocolFloat(buffer, offset+YPR_UPDATE_YAW_VALUE_INDEX);
             u.pitch = decodeProtocolFloat(buffer, offset+YPR_UPDATE_PITCH_VALUE_INDEX);
             u.roll = decodeProtocolFloat(buffer, offset+YPR_UPDATE_ROLL_VALUE_INDEX);
-            u.compass_heading = decodeProtocolFloat(buffer, offset+YPR_UPDATE_COMPASS_VALUE_INDEX);
+            u.compassHeading = decodeProtocolFloat(buffer, offset+YPR_UPDATE_COMPASS_VALUE_INDEX);
             return YPR_UPDATE_MESSAGE_LENGTH;
         }
         return 0;
@@ -255,13 +255,13 @@ public class IMUProtocol {
             u.q2 = decodeProtocolUint16(buffer, offset+QUATERNION_UPDATE_QUAT2_VALUE_INDEX);
             u.q3 = decodeProtocolUint16(buffer, offset+QUATERNION_UPDATE_QUAT3_VALUE_INDEX);
             u.q4 = decodeProtocolUint16(buffer, offset+QUATERNION_UPDATE_QUAT4_VALUE_INDEX);
-            u.accel_x = decodeProtocolUint16(buffer, offset+QUATERNION_UPDATE_ACCEL_X_VALUE_INDEX);
-            u.accel_y = decodeProtocolUint16(buffer, offset+QUATERNION_UPDATE_ACCEL_Y_VALUE_INDEX);
-            u.accel_z = decodeProtocolUint16(buffer, offset+QUATERNION_UPDATE_ACCEL_Z_VALUE_INDEX);
-            u.mag_x = decodeProtocolUint16(buffer, offset+QUATERNION_UPDATE_MAG_X_VALUE_INDEX);
-            u.mag_y = decodeProtocolUint16(buffer, offset+QUATERNION_UPDATE_MAG_Y_VALUE_INDEX);
-            u.mag_z = decodeProtocolUint16(buffer, offset+QUATERNION_UPDATE_MAG_Z_VALUE_INDEX);
-            u.temp_c = decodeProtocolFloat(buffer, offset+QUATERNION_UPDATE_TEMP_VALUE_INDEX);
+            u.accelX = decodeProtocolUint16(buffer, offset+QUATERNION_UPDATE_ACCEL_X_VALUE_INDEX);
+            u.accelY = decodeProtocolUint16(buffer, offset+QUATERNION_UPDATE_ACCEL_Y_VALUE_INDEX);
+            u.accelZ = decodeProtocolUint16(buffer, offset+QUATERNION_UPDATE_ACCEL_Z_VALUE_INDEX);
+            u.magX = decodeProtocolUint16(buffer, offset+QUATERNION_UPDATE_MAG_X_VALUE_INDEX);
+            u.magY = decodeProtocolUint16(buffer, offset+QUATERNION_UPDATE_MAG_Y_VALUE_INDEX);
+            u.magZ = decodeProtocolUint16(buffer, offset+QUATERNION_UPDATE_MAG_Z_VALUE_INDEX);
+            u.tempC = decodeProtocolFloat(buffer, offset+QUATERNION_UPDATE_TEMP_VALUE_INDEX);
             return QUATERNION_UPDATE_MESSAGE_LENGTH;
         }
         return 0;
@@ -277,34 +277,34 @@ public class IMUProtocol {
                 return 0;
             }
 
-            u.gyro_x = decodeProtocolUint16(buffer, offset+GYRO_UPDATE_GYRO_X_VALUE_INDEX);
-            u.gyro_y = decodeProtocolUint16(buffer, offset+GYRO_UPDATE_GYRO_Y_VALUE_INDEX);
-            u.gyro_z = decodeProtocolUint16(buffer, offset+GYRO_UPDATE_GYRO_Z_VALUE_INDEX);
-            u.accel_x = decodeProtocolUint16(buffer, offset+GYRO_UPDATE_ACCEL_X_VALUE_INDEX);
-            u.accel_y = decodeProtocolUint16(buffer, offset+GYRO_UPDATE_ACCEL_Y_VALUE_INDEX);
-            u.accel_z = decodeProtocolUint16(buffer, offset+GYRO_UPDATE_ACCEL_Z_VALUE_INDEX);
-            u.mag_x = decodeProtocolUint16(buffer, offset+GYRO_UPDATE_MAG_X_VALUE_INDEX);
-            u.mag_y = decodeProtocolUint16(buffer, offset+GYRO_UPDATE_MAG_Y_VALUE_INDEX);
-            u.mag_z = decodeProtocolUint16(buffer, offset+GYRO_UPDATE_MAG_Z_VALUE_INDEX);
-            u.temp_c = decodeProtocolFloat(buffer, offset+GYRO_UPDATE_TEMP_VALUE_INDEX);
+            u.gyroX = decodeProtocolUint16(buffer, offset+GYRO_UPDATE_GYRO_X_VALUE_INDEX);
+            u.gyroY = decodeProtocolUint16(buffer, offset+GYRO_UPDATE_GYRO_Y_VALUE_INDEX);
+            u.gyroZ = decodeProtocolUint16(buffer, offset+GYRO_UPDATE_GYRO_Z_VALUE_INDEX);
+            u.accelX = decodeProtocolUint16(buffer, offset+GYRO_UPDATE_ACCEL_X_VALUE_INDEX);
+            u.accelY = decodeProtocolUint16(buffer, offset+GYRO_UPDATE_ACCEL_Y_VALUE_INDEX);
+            u.accelZ = decodeProtocolUint16(buffer, offset+GYRO_UPDATE_ACCEL_Z_VALUE_INDEX);
+            u.magX = decodeProtocolUint16(buffer, offset+GYRO_UPDATE_MAG_X_VALUE_INDEX);
+            u.magY = decodeProtocolUint16(buffer, offset+GYRO_UPDATE_MAG_Y_VALUE_INDEX);
+            u.magZ = decodeProtocolUint16(buffer, offset+GYRO_UPDATE_MAG_Z_VALUE_INDEX);
+            u.tempC = decodeProtocolFloat(buffer, offset+GYRO_UPDATE_TEMP_VALUE_INDEX);
             return GYRO_UPDATE_MESSAGE_LENGTH;
         }
         return 0;
     }
 
-    public static void encodeTermination(byte[] buffer, int total_length, int content_length) {
-        if ((total_length >= (CHECKSUM_LENGTH + TERMINATOR_LENGTH)) && (total_length >= content_length + (CHECKSUM_LENGTH + TERMINATOR_LENGTH))) {
+    public static void encodeTermination(byte[] buffer, int totalLength, int contentLength) {
+        if ((totalLength >= (CHECKSUM_LENGTH + TERMINATOR_LENGTH)) && (totalLength >= contentLength + (CHECKSUM_LENGTH + TERMINATOR_LENGTH))) {
             // Checksum 
             byte checksum = 0;
-            for (int i = 0; i < content_length; i++) {
+            for (int i = 0; i < contentLength; i++) {
                 checksum += buffer[i];
             }
         // convert checksum to two ascii bytes
 
-            byteToHex(checksum, buffer, content_length);
+            byteToHex(checksum, buffer, contentLength);
             // Message Terminator
-            buffer[content_length + CHECKSUM_LENGTH + 0] = '\r';
-            buffer[content_length + CHECKSUM_LENGTH + 1] = '\n';
+            buffer[contentLength + CHECKSUM_LENGTH + 0] = '\r';
+            buffer[contentLength + CHECKSUM_LENGTH + 1] = '\n';
         }
     }
 
@@ -320,39 +320,39 @@ public class IMUProtocol {
         dest[offset + 1] = hexArray[v & 0x0F];
     }
 
-    public static short decodeProtocolUint16(byte[] uint16_string, int offset) {
-        short decoded_uint16 = 0;
-        int shift_left = 12;
+    public static short decodeProtocolUint16(byte[] uint16String, int offset) {
+        short decodedUint16 = 0;
+        int shiftLeft = 12;
         for (int i = offset + 0; i < offset + 4; i++) {
-            byte digit = (byte) (uint16_string[i] <= '9' ? uint16_string[i] - '0' : ((uint16_string[i] - 'A') + 10));
-            decoded_uint16 += (((short) digit) << shift_left);
-            shift_left -= 4;
+            byte digit = (byte) (uint16String[i] <= '9' ? uint16String[i] - '0' : ((uint16String[i] - 'A') + 10));
+            decodedUint16 += (((short) digit) << shiftLeft);
+            shiftLeft -= 4;
         }
-        return decoded_uint16;
+        return decodedUint16;
     }
 
-    public static boolean verifyChecksum(byte[] buffer, int content_length) {
+    public static boolean verifyChecksum(byte[] buffer, int contentLength) {
         // Calculate Checksum
         byte checksum = 0;
-        for (int i = 0; i < content_length; i++) {
+        for (int i = 0; i < contentLength; i++) {
             checksum += buffer[i];
         }
 
         // Decode Checksum
-        byte decoded_checksum = decodeUint8(buffer, content_length);
+        byte decoded_checksum = decodeUint8(buffer, contentLength);
 
         return (checksum == decoded_checksum);
     }
 
     public static byte decodeUint8(byte[] checksum, int offset) {
-        byte first_digit = (byte) (checksum[0 + offset] <= '9' ? checksum[0 + offset] - '0' : ((checksum[0 + offset] - 'A') + 10));
-        byte second_digit = (byte) (checksum[1 + offset] <= '9' ? checksum[1 + offset] - '0' : ((checksum[1 + offset] - 'A') + 10));
-        byte decoded_checksum = (byte) ((first_digit * 16) + second_digit);
-        return decoded_checksum;
+        byte firstDigit = (byte) (checksum[0 + offset] <= '9' ? checksum[0 + offset] - '0' : ((checksum[0 + offset] - 'A') + 10));
+        byte secondDigit = (byte) (checksum[1 + offset] <= '9' ? checksum[1 + offset] - '0' : ((checksum[1 + offset] - 'A') + 10));
+        byte decodedChecksum = (byte) ((firstDigit * 16) + secondDigit);
+        return decodedChecksum;
     }
 
     public static float decodeProtocolFloat(byte[] buffer, int offset) {
-        String float_string = new String(buffer, offset, PROTOCOL_FLOAT_LENGTH);
-        return Float.parseFloat(float_string);
+        String floatString = new String(buffer, offset, PROTOCOL_FLOAT_LENGTH);
+        return Float.parseFloat(floatString);
     }
 }

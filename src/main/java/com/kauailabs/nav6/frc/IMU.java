@@ -331,7 +331,7 @@ public class IMU extends SensorBase implements PIDSource, LiveWindowSendable, Ru
     protected int decodePacketHandler(byte[] receivedData, int offset, int bytesRemaining) {
         int packetLength = IMUProtocol.decodeYPRUpdate(receivedData, offset, bytesRemaining, yprUpdateData);
         if (packetLength > 0) {
-            setYawPitchRoll(yprUpdateData.yaw,yprUpdateData.pitch,yprUpdateData.roll,yprUpdateData.compass_heading);
+            setYawPitchRoll(yprUpdateData.yaw,yprUpdateData.pitch,yprUpdateData.roll,yprUpdateData.compassHeading);
         }
         
         return packetLength;
