@@ -39,29 +39,29 @@ public class IMU extends SensorBase implements PIDSource, LiveWindowSendable, Ru
     static final short  DEFAULT_ACCEL_FSR_G     = 2;
     static final short  DEFAULT_GYRO_FSR_DPS    = 2000;
     
-    SerialPort serial_port;
-    float yaw_history[];
-    int next_yaw_history_index;
-    double user_yaw_offset;
+    SerialPort serialPort;
+    float yawHistory[];
+    int nextYawHistoryIndex;
+    double userYawOffset;
     ITable m_table;
     Thread m_thread;
-    protected byte update_rate_hz;
+    protected byte updateRateHz;
 
     volatile float yaw;
     volatile float pitch;
     volatile float roll;
-    volatile float compass_heading;
-    volatile int update_count = 0;
-    volatile int byte_count = 0;
-    volatile float nav6_yaw_offset_degrees;
-    volatile short accel_fsr_g;
-    volatile short gyro_fsr_dps;
+    volatile float compassHeading;
+    volatile int updateCount = 0;
+    volatile int byteCount = 0;
+    volatile float nav6YawOffsetDegrees;
+    volatile short accelFsrG;
+    volatile short gyroFsrDps;
     volatile short flags;    
 
-    double last_update_time;
+    double lastUpdateTime;
     boolean stop = false;
-    private IMUProtocol.YPRUpdate ypr_update_data;
-    protected byte update_type = IMUProtocol.MSGID_YPR_UPDATE;
+    private IMUProtocol.YPRUpdate yprUpdateData;
+    protected byte updateType = IMUProtocol.MSGID_YPR_UPDATE;
     
     /**
      * Constructs the IMU class, overriding the default update rate
@@ -70,22 +70,22 @@ public class IMU extends SensorBase implements PIDSource, LiveWindowSendable, Ru
      * 
      * Note that increasing the update rate may increase the 
      * CPU utilization.
-     * @param serial_port BufferingSerialPort object to use
-     * @param update_rate_hz Custom Update Rate (Hz)
+     * @param serialPort BufferingSerialPort object to use
+     * @param updateRateHz Custom Update Rate (Hz)
      */
-    public IMU(SerialPort serial_port, byte update_rate_hz) {
-        ypr_update_data = new IMUProtocol.YPRUpdate();
-        this.update_rate_hz = update_rate_hz;
+    public IMU(SerialPort serialPort, byte updateRateHz) {
+        yprUpdateData = new IMUProtocol.YPRUpdate();
+        this.updateRateHz = updateRateHz;
         flags = 0;
-        accel_fsr_g = DEFAULT_ACCEL_FSR_G;
-        gyro_fsr_dps = DEFAULT_GYRO_FSR_DPS;
-        this.serial_port = serial_port;
-        yaw_history = new float[YAW_HISTORY_LENGTH];
+        accelFsrG = DEFAULT_ACCEL_FSR_G;
+        gyroFsrDps = DEFAULT_GYRO_FSR_DPS;
+        this.serialPort = serialPort;
+        yawHistory = new float[YAW_HISTORY_LENGTH];
         yaw = (float) 0.0;
         pitch = (float) 0.0;
         roll = (float) 0.0;
         try {
-            serial_port.reset();
+            serialPort.reset();
         } catch (RuntimeException ex) {
             ex.printStackTrace();
         }
@@ -116,62 +116,59 @@ public class IMU extends SensorBase implements PIDSource, LiveWindowSendable, Ru
         // Transmit immediately
 
         initializeYawHistory();
-        user_yaw_offset = 0;
+        userYawOffset = 0;
 
         // set the nav6 into the desired update mode
-	byte stream_command_buffer[] = new byte[256];
-	int packet_length = IMUProtocol.encodeStreamCommand( stream_command_buffer, update_type, update_rate_hz ); 
+        byte streamCommandBuffer[] = new byte[256];
+        int packetLength = IMUProtocol.encodeStreamCommand( streamCommandBuffer, updateType, updateRateHz ); 
         try {
-            serial_port.write( stream_command_buffer, packet_length );
+            serialPort.write( streamCommandBuffer, packetLength );
         } catch (RuntimeException ex) {
         	ex.printStackTrace();
         }
     }
 
     protected void setStreamResponse( IMUProtocol.StreamResponse response ) {
-        
         flags = response.flags;
-        nav6_yaw_offset_degrees = response.yaw_offset_degrees;
-        accel_fsr_g = response.accel_fsr_g;
-        gyro_fsr_dps = response.gyro_fsr_dps;
-        update_rate_hz = (byte)response.update_rate_hz;
+        nav6YawOffsetDegrees = response.yawOffsetDegrees;
+        accelFsrG = response.accelFsrG;
+        gyroFsrDps = response.gyroFsrDps;
+        updateRateHz = (byte)response.updateRateHz;
     }
         
     private void initializeYawHistory() {
-
-        Arrays.fill(yaw_history,0);
-        next_yaw_history_index = 0;
-        last_update_time = 0.0;
+        Arrays.fill(yawHistory,0);
+        nextYawHistoryIndex = 0;
+        lastUpdateTime = 0.0;
     }
 
-    private void setYawPitchRoll(float yaw, float pitch, float roll, float compass_heading) {
-
+    private void setYawPitchRoll(float yaw, float pitch, float roll, float compassHeading) {
         this.yaw = yaw;
         this.pitch = pitch;
         this.roll = roll;
-        this.compass_heading = compass_heading;
+        this.compassHeading = compassHeading;
 
         updateYawHistory(this.yaw);
     }
 
-    protected void updateYawHistory(float curr_yaw) {
-
-        if (next_yaw_history_index >= YAW_HISTORY_LENGTH) {
-            next_yaw_history_index = 0;
+    protected void updateYawHistory(float currYaw) {
+        if (nextYawHistoryIndex >= YAW_HISTORY_LENGTH) {
+            nextYawHistoryIndex = 0;
         }
-        yaw_history[next_yaw_history_index] = curr_yaw;
-        last_update_time = Timer.getFPGATimestamp();
-        next_yaw_history_index++;
+        
+        yawHistory[nextYawHistoryIndex] = currYaw;
+        lastUpdateTime = Timer.getFPGATimestamp();
+        nextYawHistoryIndex++;
     }
 
     private double getAverageFromYawHistory() {
-
-        double yaw_history_sum = 0.0;
+        double yawHistorySum = 0.0;
         for (int i = 0; i < YAW_HISTORY_LENGTH; i++) {
-            yaw_history_sum += yaw_history[i];
+            yawHistorySum += yawHistory[i];
         }
-        double yaw_history_avg = yaw_history_sum / YAW_HISTORY_LENGTH;
-        return yaw_history_avg;
+        
+        double yawHistoryAvg = yawHistorySum / YAW_HISTORY_LENGTH;
+        return yawHistoryAvg;
     }
 
     /**
@@ -179,7 +176,7 @@ public class IMU extends SensorBase implements PIDSource, LiveWindowSendable, Ru
      * reported by the nav6 IMU.
      * @return The current pitch value in degrees (-180 to 180).
      */
-        public float getPitch() {
+    public float getPitch() {
         return pitch;
     }
 
@@ -202,14 +199,16 @@ public class IMU extends SensorBase implements PIDSource, LiveWindowSendable, Ru
      * @return The current yaw value in degrees (-180 to 180).
      */
     public float getYaw() {
-        float calculated_yaw = (float) (this.yaw - user_yaw_offset);
-        if (calculated_yaw < -180) {
-            calculated_yaw += 360;
+        float calculatedYaw = (float) (this.yaw - userYawOffset);
+        if (calculatedYaw < -180) {
+            calculatedYaw += 360;
         }
-        if (calculated_yaw > 180) {
-            calculated_yaw -= 360;
+        
+        if (calculatedYaw > 180) {
+            calculatedYaw -= 360;
         }
-        return calculated_yaw;
+        
+        return calculatedYaw;
     }
 
     /**
@@ -222,7 +221,7 @@ public class IMU extends SensorBase implements PIDSource, LiveWindowSendable, Ru
      * @return The current tilt-compensated compass heading, in degrees (0-360).
      */
     public float getCompassHeading() {
-        return compass_heading;
+        return compassHeading;
     }
 
     /**
@@ -234,7 +233,7 @@ public class IMU extends SensorBase implements PIDSource, LiveWindowSendable, Ru
      * the getYaw() method.
      */
     public void zeroYaw() {
-        user_yaw_offset = getAverageFromYawHistory();
+        userYawOffset = getAverageFromYawHistory();
     }
 
     /**
@@ -245,8 +244,8 @@ public class IMU extends SensorBase implements PIDSource, LiveWindowSendable, Ru
      * @return Returns true if a valid update has been received within the last second.
      */
     public boolean isConnected() {
-        double time_since_last_update = Timer.getFPGATimestamp() - this.last_update_time;
-        return time_since_last_update <= 1.0;
+        double timeSinceLastUpdate = Timer.getFPGATimestamp() - this.lastUpdateTime;
+        return timeSinceLastUpdate <= 1.0;
     }
 
     /**
@@ -260,7 +259,7 @@ public class IMU extends SensorBase implements PIDSource, LiveWindowSendable, Ru
      * @return The number of bytes received from the nav6 IMU.
      */
     public double getByteCount() {
-        return byte_count;
+        return byteCount;
     }
 
     /**
@@ -270,7 +269,7 @@ public class IMU extends SensorBase implements PIDSource, LiveWindowSendable, Ru
      * @return The number of valid updates received from the nav6 IMU.
      */
     public double getUpdateCount() {
-        return update_count;
+        return updateCount;
     }
 
     /**
@@ -287,8 +286,8 @@ public class IMU extends SensorBase implements PIDSource, LiveWindowSendable, Ru
      * @return Returns true if the nav6 IMU is currently calibrating.
      */
     public boolean isCalibrating() {
-        short calibration_state = (short)(this.flags & IMUProtocol.NAV6_FLAG_MASK_CALIBRATION_STATE);
-        return (calibration_state != IMUProtocol.NAV6_CALIBRATION_STATE_COMPLETE);
+        short calibrationState = (short) (this.flags & IMUProtocol.NAV6_FLAG_MASK_CALIBRATION_STATE);
+        return (calibrationState != IMUProtocol.NAV6_CALIBRATION_STATE_COMPLETE);
     }
 
     /**
@@ -329,121 +328,113 @@ public class IMU extends SensorBase implements PIDSource, LiveWindowSendable, Ru
     // Invoked when a new packet is received; returns the packet length if the packet 
     // is valid, based upon IMU Protocol definitions; otherwise, returns 0
     
-    protected int decodePacketHandler(byte[] received_data, int offset, int bytes_remaining) {
-        
-        int packet_length = IMUProtocol.decodeYPRUpdate(received_data, offset, bytes_remaining, ypr_update_data);
-        if (packet_length > 0) {
-            setYawPitchRoll(ypr_update_data.yaw,ypr_update_data.pitch,ypr_update_data.roll,ypr_update_data.compass_heading);
+    protected int decodePacketHandler(byte[] receivedData, int offset, int bytesRemaining) {
+        int packetLength = IMUProtocol.decodeYPRUpdate(receivedData, offset, bytesRemaining, yprUpdateData);
+        if (packetLength > 0) {
+            setYawPitchRoll(yprUpdateData.yaw,yprUpdateData.pitch,yprUpdateData.roll,yprUpdateData.compassHeading);
         }
-        return packet_length;
+        
+        return packetLength;
     }
     
     // IMU Class thread run method
     
     public void run() {
-
         stop = false;
-        boolean stream_response_received = false;
-        double last_stream_command_sent_timestamp = 0.0;
+        boolean streamResponseReceived = false;
+        double lastStreamCommandSentTimestamp = 0.0;
         try {
-            serial_port.setReadBufferSize(512);
-            serial_port.setTimeout(1.0);
-            serial_port.enableTermination('\n');
-            serial_port.flush();
-            serial_port.reset();
+            serialPort.setReadBufferSize(512);
+            serialPort.setTimeout(1.0);
+            serialPort.enableTermination('\n');
+            serialPort.flush();
+            serialPort.reset();
         } catch (RuntimeException ex) {
             ex.printStackTrace();
         }
                 
         IMUProtocol.StreamResponse response = new IMUProtocol.StreamResponse();
 
-        byte[] stream_command = new byte[256];
+        byte[] streamCommand = new byte[256];
         
-	int cmd_packet_length = IMUProtocol.encodeStreamCommand( stream_command, update_type, update_rate_hz ); 
+        int cmdPacketLength = IMUProtocol.encodeStreamCommand(streamCommand, updateType, updateRateHz); 
         try {
-            serial_port.reset();
-            serial_port.write( stream_command, cmd_packet_length );
-            serial_port.flush();
-            last_stream_command_sent_timestamp = Timer.getFPGATimestamp();
+            serialPort.reset();
+            serialPort.write( streamCommand, cmdPacketLength );
+            serialPort.flush();
+            lastStreamCommandSentTimestamp = Timer.getFPGATimestamp();
         } catch (RuntimeException ex) {
         	ex.printStackTrace();
         }
         
         while (!stop) {
             try {
-
                 // Wait, with delays to conserve CPU resources, until
                 // bytes have arrived.
                 
-                while ( !stop && ( serial_port.getBytesReceived() < 1 ) ) {
+                while ( !stop && ( serialPort.getBytesReceived() < 1 ) ) {
                     Timer.delay(0.1);
                 }
 
-                int packets_received = 0;
-                byte[] received_data = serial_port.read(256);
-                int bytes_read = received_data.length;
-                if (bytes_read > 0) {
-                    byte_count += bytes_read;
+                int packetsReceived = 0;
+                byte[] receivedData = serialPort.read(256);
+                int bytesRead = receivedData.length;
+                if (bytesRead > 0) {
+                    byteCount += bytesRead;
                     int i = 0;
                     // Scan the buffer looking for valid packets
-                    while (i < bytes_read) {
-                                                
+                    while (i < bytesRead) {                    
                         // Attempt to decode a packet
-                        
-                        int bytes_remaining = bytes_read - i;
-                        int packet_length = decodePacketHandler(received_data,i,bytes_remaining);
-                        if (packet_length > 0) {
-                            packets_received++;
-                            update_count++;
-                            i += packet_length;
-                        } 
-                        else 
-                        {
-                            packet_length = IMUProtocol.decodeStreamResponse(received_data, i, bytes_remaining, response);
-                            if (packet_length > 0) {
-                                packets_received++;
+                        int bytesRemaining = bytesRead - i;
+                        int packetLength = decodePacketHandler(receivedData,i,bytesRemaining);
+                        if (packetLength > 0) {
+                            packetsReceived++;
+                            updateCount++;
+                            i += packetLength;
+                        } else {
+                            packetLength = IMUProtocol.decodeStreamResponse(receivedData, i, bytesRemaining, response);
+                            if (packetLength > 0) {
+                                packetsReceived++;
                                 setStreamResponse(response);
-                                stream_response_received = true;
-                                i += packet_length;
-                            }
-                            else {
+                                streamResponseReceived = true;
+                                i += packetLength;
+                            } else {
                                 // current index is not the start of a valid packet; increment
                                 i++;
                             }
                         }
                     }
                 
-                    if ( ( packets_received == 0 ) && ( bytes_read == 256 ) ) {
+                    if (packetsReceived == 0 && bytesRead == 256) {
                         // Workaround for issue found in Java SerialPort implementation:
                         // No packets received and 256 bytes received; this
                         // condition occurs in the Java SerialPort.  In this case,
                         // reset the serial port.
-                        serial_port.reset();
+                        serialPort.reset();
                     }
                     
                     // If a stream configuration response has not been received within three seconds
                     // of operation, (re)send a stream configuration request
                     
-                    if ( !stream_response_received && ((Timer.getFPGATimestamp() - last_stream_command_sent_timestamp ) > 3.0 ) ) {
-                        cmd_packet_length = IMUProtocol.encodeStreamCommand( stream_command, update_type, update_rate_hz ); 
+                    if (!streamResponseReceived && ((Timer.getFPGATimestamp() - lastStreamCommandSentTimestamp ) > 3.0)) {
+                        cmdPacketLength = IMUProtocol.encodeStreamCommand(streamCommand, updateType, updateRateHz); 
                         try {
-                            last_stream_command_sent_timestamp = Timer.getFPGATimestamp();
-                            serial_port.write( stream_command, cmd_packet_length );
-                            serial_port.flush();
+                            lastStreamCommandSentTimestamp = Timer.getFPGATimestamp();
+                            serialPort.write( streamCommand, cmdPacketLength );
+                            serialPort.flush();
                         } catch (RuntimeException ex2) {
                         	ex2.printStackTrace();
                         }                                                    
-                    }
-                    else {                        
+                    } else {                        
                         // If no bytes remain in the buffer, and not awaiting a response, sleep a bit
-                        if ( stream_response_received && ( serial_port.getBytesReceived() == 0 ) ) {
-                            Timer.delay(1.0/update_rate_hz);
+                        if ( streamResponseReceived && serialPort.getBytesReceived() == 0) {
+                            Timer.delay(1.0/updateRateHz);
                         }        
                     }
                 }
             } catch (RuntimeException ex) {
                 // This exception typically indicates a Timeout
-                stream_response_received = false;
+                streamResponseReceived = false;
                 ex.printStackTrace();
             }
         }

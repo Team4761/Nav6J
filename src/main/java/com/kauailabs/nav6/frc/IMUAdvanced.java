@@ -26,14 +26,14 @@ import edu.wpi.first.wpilibj.SerialPort;
  * @author Scott
  */public class IMUAdvanced extends IMU {
 
-    private IMUProtocol.QuaternionUpdate quaternion_update_data;    
-    volatile float world_linear_accel_x;
-    volatile float world_linear_accel_y;
-    volatile float world_linear_accel_z;
-    volatile float temp_c;
-    float world_linear_accel_history[];
-    int   next_world_linear_accel_history_index;
-    float world_linear_acceleration_recent_avg;
+    private IMUProtocol.QuaternionUpdate quaternionUpdateData;    
+    volatile float worldLinearAccelX;
+    volatile float worldLinearAccelY;
+    volatile float worldLinearAccelZ;
+    volatile float tempC;
+    float worldLinearAccelHistory[];
+    int   nextWorldLinearAccelHistoryIndex;
+    float worldLinearAccelerationRecentAvg;
     
     static final int WORLD_LINEAR_ACCEL_HISTORY_LENGTH = 10;
 
@@ -46,13 +46,13 @@ import edu.wpi.first.wpilibj.SerialPort;
      * CPU utilization.  Note that calculation of some 
      * advanced values utilizes additional cpu cycles, when compared
      * to the IMU class.
-     * @param serial_port BufferingSerialPort object to use
-     * @param update_rate_hz Custom Update Rate (Hz)
+     * @param serialPort BufferingSerialPort object to use
+     * @param updateRateHz Custom Update Rate (Hz)
      */
-    public IMUAdvanced(SerialPort serial_port, byte update_rate_hz) {
-        super(serial_port,update_rate_hz);
-        quaternion_update_data = new IMUProtocol.QuaternionUpdate();
-        update_type = IMUProtocol.MSGID_QUATERNION_UPDATE;
+    public IMUAdvanced(SerialPort serialPort, byte updateRateHz) {
+        super(serialPort, updateRateHz);
+        quaternionUpdateData = new IMUProtocol.QuaternionUpdate();
+        updateType = IMUProtocol.MSGID_QUATERNION_UPDATE;
     }
     
     /**
@@ -60,20 +60,20 @@ import edu.wpi.first.wpilibj.SerialPort;
      * 
      * Note that calculation of some advanced values utilizes additional 
      * cpu cycles, when compared to the IMU class.
-     * @param serial_port BufferingSerialPort object to use
+     * @param serialPort BufferingSerialPort object to use
      */
-    public IMUAdvanced(SerialPort serial_port) {
-        this(serial_port, DEFAULT_UPDATE_RATE_HZ);
+    public IMUAdvanced(SerialPort serialPort) {
+        this(serialPort, DEFAULT_UPDATE_RATE_HZ);
     }
 
     //@Override
-    protected int decodePacketHandler(byte[] received_data, int offset, int bytes_remaining) {
+    protected int decodePacketHandler(byte[] receivedData, int offset, int bytesRemaining) {
         
-        int packet_length = IMUProtocol.decodeQuaternionUpdate(received_data, offset, bytes_remaining, quaternion_update_data);
-        if (packet_length > 0) {
-            setQuaternion(quaternion_update_data);
+        int packetLength = IMUProtocol.decodeQuaternionUpdate(receivedData, offset, bytesRemaining, quaternionUpdateData);
+        if (packetLength > 0) {
+            setQuaternion(quaternionUpdateData);
         }
-        return packet_length;
+        return packetLength;
     }
         
     /**
@@ -89,7 +89,7 @@ import edu.wpi.first.wpilibj.SerialPort;
      */
     public float getWorldLinearAccelX()
     {
-        return this.world_linear_accel_x;
+        return this.worldLinearAccelX;
     }
 
     /**
@@ -105,7 +105,7 @@ import edu.wpi.first.wpilibj.SerialPort;
      */
     public float getWorldLinearAccelY()
     {
-        return this.world_linear_accel_y;
+        return this.worldLinearAccelY;
     }
 
     /**
@@ -121,7 +121,16 @@ import edu.wpi.first.wpilibj.SerialPort;
      */
     public float getWorldLinearAccelZ()
     {
-        return this.world_linear_accel_z;
+        return this.worldLinearAccelZ;
+    }
+    
+    /**
+     * Gets the angle returned from the gyro without constraining it
+     * to a certain range
+     * @return the angle from -infinity to infinity
+     */
+    public float getAccumulatedYaw() {
+    	return (float) (this.yaw - userYawOffset);
     }
     
     /**
@@ -140,8 +149,7 @@ import edu.wpi.first.wpilibj.SerialPort;
      * 0.01g, the motion state is indicated.
      * @return Returns true if the nav6 IMU is currently detecting motion.
      */
-    public boolean isMoving()
-    {
+    public boolean isMoving() {
         return (getAverageFromWorldLinearAccelHistory() >= 0.01);
     }
 
@@ -153,38 +161,39 @@ import edu.wpi.first.wpilibj.SerialPort;
      * dependent calibration.
      * @return The current temperature (in degrees centigrade).
      */
-    public float getTempC()
-    {
-        return this.temp_c;
+    public float getTempC() {
+        return this.tempC;
     }
     
     //@Override
     protected void initIMU() {
         super.initIMU();
-        world_linear_accel_history = new float[WORLD_LINEAR_ACCEL_HISTORY_LENGTH];
+        worldLinearAccelHistory = new float[WORLD_LINEAR_ACCEL_HISTORY_LENGTH];
         initWorldLinearAccelHistory();
     }
 
-    private void initWorldLinearAccelHistory(){
-        Arrays.fill(world_linear_accel_history,0);
-        next_world_linear_accel_history_index = 0;
-        world_linear_acceleration_recent_avg = (float) 0.0;
+    private void initWorldLinearAccelHistory() {
+        Arrays.fill(worldLinearAccelHistory,0);
+        nextWorldLinearAccelHistoryIndex = 0;
+        worldLinearAccelerationRecentAvg = (float) 0.0;
     }
     
-    private void updateWorldLinearAccelHistory( float x, float y, float z ){
-        if (next_world_linear_accel_history_index >= WORLD_LINEAR_ACCEL_HISTORY_LENGTH) {
-            next_world_linear_accel_history_index = 0;
+    private void updateWorldLinearAccelHistory(float x, float y, float z) {
+        if (nextWorldLinearAccelHistoryIndex >= WORLD_LINEAR_ACCEL_HISTORY_LENGTH) {
+            nextWorldLinearAccelHistoryIndex = 0;
         }
-        world_linear_accel_history[next_world_linear_accel_history_index] = Math.abs(x) + Math.abs(y);
-        next_world_linear_accel_history_index++;
+        
+        worldLinearAccelHistory[nextWorldLinearAccelHistoryIndex] = Math.abs(x) + Math.abs(y);
+        nextWorldLinearAccelHistoryIndex++;
     }
     
-    public float getAverageFromWorldLinearAccelHistory(){
-        float world_linear_accel_history_sum = (float) 0.0;
+    public float getAverageFromWorldLinearAccelHistory() {
+        float worldLinearAccelHistorySum = (float) 0.0;
         for (int i = 0; i < WORLD_LINEAR_ACCEL_HISTORY_LENGTH; i++) {
-            world_linear_accel_history_sum += world_linear_accel_history[i];
+            worldLinearAccelHistorySum += worldLinearAccelHistory[i];
         }
-        return world_linear_accel_history_sum / WORLD_LINEAR_ACCEL_HISTORY_LENGTH;
+        
+        return worldLinearAccelHistorySum / WORLD_LINEAR_ACCEL_HISTORY_LENGTH;
     }
 
     private void setQuaternion(IMUProtocol.QuaternionUpdate raw_update) {
@@ -194,17 +203,17 @@ import edu.wpi.first.wpilibj.SerialPort;
             float[] gravity = new float[3];
             //float[] euler = new float[3];
             float[] ypr = new float[3];
-            float yaw_degrees;
-            float pitch_degrees;
-            float roll_degrees;
-            float linear_acceleration_x;
-            float linear_acceleration_y;
-            float linear_acceleration_z;
+            float yawDegrees;
+            float pitchDegrees;
+            float rollDegrees;
+            float linearAccelerationX;
+            float linearAccelerationY;
+            float linearAccelerationZ;
             float q2[] = new float[4];
-            float q_product[] = new float[4];
-            float world_linear_acceleration_x;
-            float world_linear_acceleration_y;
-            float world_linear_acceleration_z;
+            float qProduct[] = new float[4];
+            float worldLinearAccelerationX;
+            float worldLinearAccelerationY;
+            float worldLinearAccelerationZ;
                        
             q[0] = ((float)raw_update.q1) / 16384.0f;
             q[1] = ((float)raw_update.q2) / 16384.0f;
@@ -232,28 +241,28 @@ import edu.wpi.first.wpilibj.SerialPort;
             ypr[1] = (float) Math.atan(gravity[0] / Math.sqrt(gravity[1]*gravity[1] + gravity[2]*gravity[2]));
             ypr[2] = (float) Math.atan(gravity[1] / Math.sqrt(gravity[0]*gravity[0] + gravity[2]*gravity[2]));
              
-            yaw_degrees = (float) (ypr[0] * (180.0/Math.PI)); 
-            pitch_degrees = (float) (ypr[1] * (180.0/Math.PI)); 
-            roll_degrees = (float) (ypr[2] * (180.0/Math.PI)); 
+            yawDegrees = (float) (ypr[0] * (180.0/Math.PI)); 
+            pitchDegrees = (float) (ypr[1] * (180.0/Math.PI)); 
+            rollDegrees = (float) (ypr[2] * (180.0/Math.PI)); 
              
             // Subtract nav6 offset, and handle potential 360 degree wrap-around
-            yaw_degrees -= nav6_yaw_offset_degrees;
-            if ( yaw_degrees < -180 ) yaw_degrees += 360;
-            if ( yaw_degrees > 180 ) yaw_degrees -= 360;
+            yawDegrees -= nav6YawOffsetDegrees;
+            if ( yawDegrees < -180 ) yawDegrees += 360;
+            if ( yawDegrees > 180 ) yawDegrees -= 360;
              
             // calculate linear acceleration by 
             // removing the gravity component (+1g = +4096 in standard DMP FIFO packet)
              
-            linear_acceleration_x = (float) ((((float)raw_update.accel_x) / (32768.0 / accel_fsr_g)) - gravity[0]);
-            linear_acceleration_y = (float) ((((float)raw_update.accel_y) / (32768.0 / accel_fsr_g)) - gravity[1]);
-            linear_acceleration_z = (float) ((((float)raw_update.accel_z) / (32768.0 / accel_fsr_g)) - gravity[2]); 
+            linearAccelerationX = (float) ((((float)raw_update.accelX) / (32768.0 / accelFsrG)) - gravity[0]);
+            linearAccelerationY = (float) ((((float)raw_update.accelY) / (32768.0 / accelFsrG)) - gravity[1]);
+            linearAccelerationZ = (float) ((((float)raw_update.accelZ) / (32768.0 / accelFsrG)) - gravity[2]); 
             
             // Calculate world-frame acceleration
             
             q2[0] = 0;
-            q2[1] = linear_acceleration_x;
-            q2[2] = linear_acceleration_y;
-            q2[3] = linear_acceleration_z;
+            q2[1] = linearAccelerationX;
+            q2[2] = linearAccelerationY;
+            q2[3] = linearAccelerationZ;
             
             // Rotate linear acceleration so that it's relative to the world reference frame
             
@@ -276,64 +285,64 @@ import edu.wpi.first.wpilibj.SerialPort;
             //     (Q1 * Q2).y = (w1y2 - x1z2 + y1w2 + z1x2)
             //     (Q1 * Q2).z = (w1z2 + x1y2 - y1x2 + z1w2
             
-            q_product[0] = q[0]*q2[0] - q[1]*q2[1] - q[2]*q2[2] - q[3]*q2[3];  // new w
-            q_product[1] = q[0]*q2[1] + q[1]*q2[0] + q[2]*q2[3] - q[3]*q2[2];  // new x
-            q_product[2] = q[0]*q2[2] - q[1]*q2[3] + q[2]*q2[0] + q[3]*q2[1];  // new y 
-            q_product[3] = q[0]*q2[3] + q[1]*q2[2] - q[2]*q2[1] + q[3]*q2[0];  // new z
+            qProduct[0] = q[0]*q2[0] - q[1]*q2[1] - q[2]*q2[2] - q[3]*q2[3];  // new w
+            qProduct[1] = q[0]*q2[1] + q[1]*q2[0] + q[2]*q2[3] - q[3]*q2[2];  // new x
+            qProduct[2] = q[0]*q2[2] - q[1]*q2[3] + q[2]*q2[0] + q[3]*q2[1];  // new y 
+            qProduct[3] = q[0]*q2[3] + q[1]*q2[2] - q[2]*q2[1] + q[3]*q2[0];  // new z
 
-            float[] q_conjugate = new float[4];
+            float[] qConjugate = new float[4];
             
-            q_conjugate[0] = q[0];            
-            q_conjugate[1] = -q[1];            
-            q_conjugate[2] = -q[2];            
-            q_conjugate[3] = -q[3];            
+            qConjugate[0] = q[0];            
+            qConjugate[1] = -q[1];            
+            qConjugate[2] = -q[2];            
+            qConjugate[3] = -q[3];            
 
-            float[] q_final = new float[4];
+            float[] qFinal = new float[4];
             
-            q_final[0] = q_product[0]*q_conjugate[0] - q_product[1]*q_conjugate[1] - q_product[2]*q_conjugate[2] - q_product[3]*q_conjugate[3];  // new w
-            q_final[1] = q_product[0]*q_conjugate[1] + q_product[1]*q_conjugate[0] + q_product[2]*q_conjugate[3] - q_product[3]*q_conjugate[2];  // new x
-            q_final[2] = q_product[0]*q_conjugate[2] - q_product[1]*q_conjugate[3] + q_product[2]*q_conjugate[0] + q_product[3]*q_conjugate[1];  // new y 
-            q_final[3] = q_product[0]*q_conjugate[3] + q_product[1]*q_conjugate[2] - q_product[2]*q_conjugate[1] + q_product[3]*q_conjugate[0];  // new z
+            qFinal[0] = qProduct[0]*qConjugate[0] - qProduct[1]*qConjugate[1] - qProduct[2]*qConjugate[2] - qProduct[3]*qConjugate[3];  // new w
+            qFinal[1] = qProduct[0]*qConjugate[1] + qProduct[1]*qConjugate[0] + qProduct[2]*qConjugate[3] - qProduct[3]*qConjugate[2];  // new x
+            qFinal[2] = qProduct[0]*qConjugate[2] - qProduct[1]*qConjugate[3] + qProduct[2]*qConjugate[0] + qProduct[3]*qConjugate[1];  // new y 
+            qFinal[3] = qProduct[0]*qConjugate[3] + qProduct[1]*qConjugate[2] - qProduct[2]*qConjugate[1] + qProduct[3]*qConjugate[0];  // new z
 
-            world_linear_acceleration_x = q_final[1];
-            world_linear_acceleration_y = q_final[2];
-            world_linear_acceleration_z = q_final[3];
+            worldLinearAccelerationX = qFinal[1];
+            worldLinearAccelerationY = qFinal[2];
+            worldLinearAccelerationZ = qFinal[3];
              
-            updateWorldLinearAccelHistory(world_linear_acceleration_x,world_linear_acceleration_y, world_linear_acceleration_z);
+            updateWorldLinearAccelHistory(worldLinearAccelerationX, worldLinearAccelerationY, worldLinearAccelerationZ);
              
             // Calculate tilt-compensated compass heading
             
-            float inverted_pitch = -ypr[1];
-            float roll_radians = ypr[2];
+            float invertedPitch = -ypr[1];
+            float rollRadians = ypr[2];
             
-            float cos_roll = (float) Math.cos(roll_radians);
-            float sin_roll = (float) Math.sin(roll_radians);
-            float cos_pitch = (float) Math.cos(inverted_pitch);
-            float sin_pitch = (float) Math.sin(inverted_pitch);
+            float cosRoll = (float) Math.cos(rollRadians);
+            float sinRoll = (float) Math.sin(rollRadians);
+            float cosPitch = (float) Math.cos(invertedPitch);
+            float sinPitch = (float) Math.sin(invertedPitch);
             
-            float MAG_X = raw_update.mag_x * cos_pitch + raw_update.mag_z * sin_pitch;
-            float MAG_Y = raw_update.mag_x * sin_roll * sin_pitch + raw_update.mag_y * cos_roll - raw_update.mag_z * sin_roll * cos_pitch;
-            float tilt_compensated_heading_radians = (float) Math.atan2(MAG_Y,MAG_X);
-            float tilt_compensated_heading_degrees = (float) (tilt_compensated_heading_radians * (180.0 / Math.PI));
+            float MAG_X = raw_update.magX * cosPitch + raw_update.magZ * sinPitch;
+            float MAG_Y = raw_update.magX * sinRoll * sinPitch + raw_update.magY * cosRoll - raw_update.magZ * sinRoll * cosPitch;
+            float tiltCompensatedHeadingRadians = (float) Math.atan2(MAG_Y, MAG_X);
+            float tiltCompensatedHeadingDegrees = (float) (tiltCompensatedHeadingRadians * (180.0 / Math.PI));
             
             // Adjust compass for board orientation,
             // and modify range from -180-180 to
             // 0-360 degrees
           
-            tilt_compensated_heading_degrees -= 90.0;
-            if ( tilt_compensated_heading_degrees < 0 ) {
-              tilt_compensated_heading_degrees += 360; 
+            tiltCompensatedHeadingDegrees -= 90.0;
+            if (tiltCompensatedHeadingDegrees < 0) {
+              tiltCompensatedHeadingDegrees += 360; 
             }
             
-            this.yaw = yaw_degrees;
-            this.pitch = pitch_degrees;
-            this.roll = roll_degrees;
-            this.compass_heading = tilt_compensated_heading_degrees;
+            this.yaw = yawDegrees;
+            this.pitch = pitchDegrees;
+            this.roll = rollDegrees;
+            this.compassHeading = tiltCompensatedHeadingDegrees;
             
-            this.world_linear_accel_x = world_linear_acceleration_x;
-            this.world_linear_accel_y = world_linear_acceleration_y;
-            this.world_linear_accel_z = world_linear_acceleration_z;
-            this.temp_c = raw_update.temp_c;
+            this.worldLinearAccelX = worldLinearAccelerationX;
+            this.worldLinearAccelY = worldLinearAccelerationY;
+            this.worldLinearAccelZ = worldLinearAccelerationZ;
+            this.tempC = raw_update.tempC;
             updateYawHistory(this.yaw);            
         }
     }
